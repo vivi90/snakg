@@ -1,7 +1,7 @@
 # Snakg
 This is just another [Snake](https://en.wikipedia.org/wiki/Snake_(video_game_genre)) clon,
 written in [x86](https://en.wikipedia.org/wiki/X86) [Assembly](https://en.wikipedia.org/wiki/Assembly_language)
-and translated into [opcode](https://en.wikipedia.org/wiki/Opcode) by [TASM](https://en.wikipedia.org/wiki/Turbo_Assembler).
+and translated into machine code by [TASM](https://en.wikipedia.org/wiki/Turbo_Assembler).
 
 The 'g' intead of an 'e' at the end is just a mirrored 'e', to mark this game as a clone.
 So it has no special meaning.
