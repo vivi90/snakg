@@ -22,6 +22,8 @@
     ;           Score
     ;============================
     score DW 0
+        m DW 1111h
+        n DW 2222h
 
 .CODE
     INCLUDE lib.asm
