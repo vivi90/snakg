@@ -125,11 +125,53 @@
             RET
     moveAndDrawSnake ENDP
 
+    collisionCheck PROC
+            PUSH BX CX DX
+        ; Calculates head element index
+            MOV AX, positionOffset
+            MUL snakeLength
+            SUB AX, positionOffset
+            MOV BX, AX
+            ADD BX, OFFSET snake
+        ; Loads head element coordinates
+            MOV CX, [BX].x
+            MOV DX, [BX].y
+        ; Resets collision state
+            MOV AX, 0
+        ; Checks border collisions
+            CMP CX, borderWidth
+            JL @@collisionDetected
+            CMP CX, graphicWidth - borderWidth
+            JG @@collisionDetected
+            CMP DX, 2 * borderWidth + textHeight
+            JL @@collisionDetected
+            CMP DX, graphicHeight - borderWidth - snakeWidth
+            JG @@collisionDetected
+        ; Checks self collisions
+        @@nextElement:
+            SUB BX, positionOffset
+            CMP CX, [BX].x
+            JNE $ + 7
+            CMP DX, [BX].y
+            JE @@collisionDetected
+            CMP BX, OFFSET snake
+            JE @@exit
+            JMP @@nextElement
+        ; Returns
+        @@exit:
+            POP DX CX BX
+            RET
+        ; Changes collision state
+        @@collisionDetected:
+            MOV AX, 1
+            JMP @@exit
+    collisionCheck ENDP
+
     ;============================
     ;          Screens
     ;============================
     GameScreen PROC
-        PUSH AX BX DX
+        PUSH AX
         setVideoMode graphicMode
         CALL prepareNewGame
         CALL drawBorder
@@ -137,32 +179,13 @@
         @@run:
             writeNumber 1, 77, scoreColor, score
             CALL moveAndDrawSnake
+            CALL collisionCheck
+            CMP AX, 1
+            JE @@exitGame
             sleep snakeDelay
-            MOV AX, positionOffset
-            MUL snakeLength
-            SUB AX, positionOffset
-            MOV BX, AX
-        @@borderCollisionLeft:
-            CMP [snake + BX].x, borderWidth
-            JNL @@borderCollisionRight
-            JMP @@exitGame
-        @@borderCollisionRight:
-            CMP [snake + BX].x, graphicWidth - borderWidth
-            JNG @@borderCollisionTop
-            JMP @@exitGame
-        @@borderCollisionTop:
-            CMP [snake + BX].y, 2 * borderWidth + textHeight
-            JNL @@borderCollisionDown
-            JMP @@exitGame
-        @@borderCollisionDown:
-            CMP [snake + BX].y, graphicHeight - borderWidth - snakeWidth
-            JNG @@gameInput
-            JMP @@exitGame
         @@gameInput:
             loadInput
-            JNE @@checkInput ; checks, if key is pressed
-            JMP @@run
-        @@checkInput:
+            JE @@run ; checks, if key is pressed
             clearInput
             CMP AL, w
             JE @@goUp
@@ -201,7 +224,7 @@
             setVideoMode minimalTextMode
             writeText 12, 15, gameOverColor, gameOver, gameOverLength
             sleep gameOverDelay
-            POP DX BX AX
+            POP AX
             RET
     GameScreen ENDP
 
