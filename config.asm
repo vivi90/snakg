@@ -23,4 +23,5 @@ defaultSnakeLength EQU 8
 defaultSnakeDirection EQU right
 snakeDelay DD 100000 ; 100ms
 ;snakeDelay DD 1000000 ; 1s
-gameOverDelay DD 2000000 ; 1s
+gameOverDelay DD 2000000 ; 2s
+snakeGrowInterval EQU 10 ; 1s (divisor of snakeDelay)

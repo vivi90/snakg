@@ -34,9 +34,9 @@
     ;      Game subroutines
     ;============================
     prepareNewGame PROC
-        PUSH AX BX DX
-        MOV snakeLength, 0
-        MOV BX, 0
+            PUSH AX DX
+            MOV snakeLength, 0
+            MOV BX, 0
         @@createSnake:
             MOV AX, snakeWidth
             MUL snakeLength
@@ -47,40 +47,46 @@
             INC snakeLength
             CMP snakeLength, defaultSnakeLength
             JNE @@createSnake
-        MOV snakeDirection, defaultSnakeDirection
-        MOV score, 0
-        POP DX BX AX
-        RET
+            MOV snakeDirection, defaultSnakeDirection
+            MOV score, 0
+            MOV BX, snakeGrowInterval
+            POP DX AX
+            RET
     prepareNewGame ENDP
 
     drawBorder PROC
-        PUSH CX DX
-        MOV CX, 0
-        drawVerticalLine CX, borderColor, borderWidth
-        MOV DX, 0
-        drawHorizontalLine DX, borderColor, borderWidth
-        MOV DX, borderWidth + textHeight
-        drawHorizontalLine DX, borderColor, borderWidth
-        MOV DX, graphicHeight - borderWidth
-        drawHorizontalLine DX, borderColor, borderWidth
-        MOV CX, graphicWidth - borderWidth
-        drawVerticalLine CX, borderColor, borderWidth
-        POP DX CX
-        RET
+            PUSH CX DX
+            MOV CX, 0
+            drawVerticalLine CX, borderColor, borderWidth
+            MOV DX, 0
+            drawHorizontalLine DX, borderColor, borderWidth
+            MOV DX, borderWidth + textHeight
+            drawHorizontalLine DX, borderColor, borderWidth
+            MOV DX, graphicHeight - borderWidth
+            drawHorizontalLine DX, borderColor, borderWidth
+            MOV CX, graphicWidth - borderWidth
+            drawVerticalLine CX, borderColor, borderWidth
+            POP DX CX
+            RET
     drawBorder ENDP
 
-    moveAndDrawSnake PROC
-        PUSH AX BX CX DX
-        ; Repaints old tail to hide it
-        drawDot snake.x, snake.y, backgroundColor, snakeWidth
-        MOV BX, 0
-        @@next:
-            ; Checks, if it's the last element
+    snakeHeadIndex PROC
             PUSH DX
             MOV AX, positionOffset
             MUL snakeLength
             SUB AX, positionOffset
             POP DX
+            RET
+    snakeHeadIndex ENDP
+
+    moveAndDrawSnake PROC
+            PUSH AX BX CX DX
+        ; Repaints old tail to hide it
+            drawDot snake.x, snake.y, backgroundColor, snakeWidth
+            MOV BX, 0
+        @@next:
+            ; Checks, if it's the last element
+            CALL snakeHeadIndex
             CMP BX, AX
             JE @@head
             ; Loads the next element
@@ -126,11 +132,10 @@
     moveAndDrawSnake ENDP
 
     collisionCheck PROC
+        ; Return: AX
             PUSH BX CX DX
         ; Calculates head element index
-            MOV AX, positionOffset
-            MUL snakeLength
-            SUB AX, positionOffset
+            CALL snakeHeadIndex
             MOV BX, AX
             ADD BX, OFFSET snake
         ; Loads head element coordinates
@@ -167,21 +172,62 @@
             JMP @@exit
     collisionCheck ENDP
 
+    feedSnake PROC
+        ; Input & Return: BX
+            PUSH AX CX DX
+            DEC BX
+            CMP BX, 0
+            JNE @@exit
+        ; Increases score
+            INC score
+        ; Increases snake length
+            CALL snakeHeadIndex
+            MOV BX, AX
+            MOV CX, [snake + BX].x
+            MOV DX, [snake + BX].y
+            CMP snakeDirection, up
+            JE @@goUp
+            CMP snakeDirection, left
+            JE @@goLeft
+            CMP snakeDirection, down
+            JE @@goDown
+            ADD CX, snakeWidth
+            JMP @@grow
+        @@goUp:
+            SUB DX, snakeWidth
+            JMP @@grow
+        @@goLeft:
+            SUB CX, snakeWidth
+            JMP @@grow
+        @@goDown:
+            ADD DX, snakeWidth
+        @@grow:
+            MOV [snake + BX + positionOffset].x, CX
+            MOV [snake + BX + positionOffset].y, DX
+            INC snakeLength
+        ; Resets interval
+            MOV BX, snakeGrowInterval
+        @@exit:
+            POP DX CX AX
+            RET
+    feedSnake ENDP
+
     ;============================
     ;          Screens
     ;============================
     GameScreen PROC
-        PUSH AX
-        setVideoMode graphicMode
-        CALL prepareNewGame
-        CALL drawBorder
-        writeText 1, 2, textColor, scoreLabel, scoreLabelLength
+            PUSH AX BX
+            setVideoMode graphicMode
+            CALL prepareNewGame
+            CALL drawBorder
+            writeText 1, 2, textColor, scoreLabel, scoreLabelLength
         @@run:
             writeNumber 1, 77, scoreColor, score
             CALL moveAndDrawSnake
             CALL collisionCheck
             CMP AX, 1
             JE @@exitGame
+            CALL feedSnake
             sleep snakeDelay
         @@gameInput:
             loadInput
@@ -224,12 +270,12 @@
             setVideoMode minimalTextMode
             writeText 12, 15, gameOverColor, gameOver, gameOverLength
             sleep gameOverDelay
-            POP AX
+            POP BX AX
             RET
     GameScreen ENDP
 
     MenuScreen PROC
-        PUSH AX
+            PUSH AX
         @@menu:
             setVideoMode textMode
             writeText 0, 0, textColor, logo, logoLength
