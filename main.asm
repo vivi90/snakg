@@ -1,4 +1,4 @@
-.MODEL Small, C
+.MODEL Small
 .STACK 100h
 .DATA
     INCLUDE text.asm
@@ -32,7 +32,7 @@
     ;      Game subroutines
     ;============================
     prepareNewGame PROC
-        USES AX, BX, DX
+        PUSH AX BX DX
         MOV snakeLength, 0
         MOV BX, 0
         @@createSnake:
@@ -47,11 +47,12 @@
             JNE @@createSnake
         MOV snakeDirection, defaultSnakeDirection
         MOV score, 0
+        POP DX BX AX
         RET
     prepareNewGame ENDP
 
     drawBorder PROC
-        USES CX, DX
+        PUSH CX DX
         MOV CX, 0
         drawVerticalLine CX, borderColor, borderWidth
         MOV DX, 0
@@ -62,11 +63,12 @@
         drawHorizontalLine DX, borderColor, borderWidth
         MOV CX, graphicWidth - borderWidth
         drawVerticalLine CX, borderColor, borderWidth
+        POP DX CX
         RET
     drawBorder ENDP
 
     moveAndDrawSnake PROC
-        USES AX, BX, CX, DX
+        PUSH AX BX CX DX
         ; Repaints old tail to hide it
         drawDot snake.x, snake.y, backgroundColor, snakeWidth
         MOV BX, 0
@@ -117,6 +119,7 @@
             MOV [snake + BX].y, DX
             ; Draws updated element as head
             drawDot CX, DX, snakeHeadColor, snakeWidth
+            POP DX CX BX AX
             RET
     moveAndDrawSnake ENDP
 
@@ -124,7 +127,7 @@
     ;          Screens
     ;============================
     GameScreen PROC
-        USES AX, BX, DX
+        PUSH AX BX DX
         setVideoMode graphicMode
         CALL prepareNewGame
         CALL drawBorder
@@ -196,11 +199,12 @@
             setVideoMode minimalTextMode
             writeText 12, 15, gameOverColor, gameOver, gameOverLength
             sleep gameOverDelay
+            POP DX BX AX
             RET
     GameScreen ENDP
 
     MenuScreen PROC
-        USES AX
+        PUSH AX
         @@menu:
             setVideoMode textMode
             writeText 0, 0, textColor, logo, logoLength
@@ -220,6 +224,7 @@
             JMP @@menu
         @@exitMenu:
             setVideoMode textMode ; Clears Screen
+            POP AX
             RET
     MenuScreen ENDP
 
