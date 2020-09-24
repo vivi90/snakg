@@ -1,5 +1,5 @@
 ;============================
-;        Basic macros
+;           Basic
 ;============================
 stackFrame EQU 8 ; Space for stored AX, BX, CX, and DX register
 
@@ -25,8 +25,30 @@ sleep MACRO time
         POP DX CX BX AX
 ENDM
 
+randomNumber PROC
+        PUSH DX CX BX AX
+    ; Range: AX to BX
+        SUB BX, AX
+    ; Gets current system time
+        MOV AH, 2Ch
+        INT 21h
+    ; Keeps seconds and hundredths of seconds as seed
+        MOV AX, DX
+        MOV DX, 0
+    ; Uses modulo to get a pseudo-random number
+        MOV CX, BX
+        DIV CX
+    ; Considers range
+        POP AX
+        ADD DX, AX
+    ; Returns random number: AX
+        MOV AX, DX
+        POP BX CX DX
+        RET
+randomNumber ENDP
+
 ;============================
-;        Input macros
+;           Input
 ;============================
 loadInput MACRO
     ; Return: AL
@@ -43,7 +65,7 @@ clearInput MACRO
 ENDM
 
 ;============================
-;       Output macros
+;          Output
 ;============================
 setVideoMode MACRO mode
         PUSH AX
