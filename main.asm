@@ -132,7 +132,6 @@
     moveAndDrawSnake ENDP
 
     collisionCheck PROC
-        ; Return: AX
             PUSH BX CX DX
         ; Calculates head element index
             CALL snakeHeadIndex
@@ -162,7 +161,7 @@
             CMP BX, OFFSET snake
             JE @@exit
             JMP @@nextElement
-        ; Returns
+        ; Returns: AX = 1 if collision detected, otherwise 0
         @@exit:
             POP DX CX BX
             RET
