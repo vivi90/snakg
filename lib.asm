@@ -26,6 +26,7 @@ sleep MACRO time
 ENDM
 
 randomNumber PROC
+    ; Inspired by: https://stackoverflow.com/questions/17855817/generating-a-random-number-within-range-of-0-9-in-x86-8086-assembly
         PUSH DX CX BX AX
     ; Range: AX to BX
         SUB BX, AX
