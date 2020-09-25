@@ -133,6 +133,25 @@
 
     collisionCheck PROC
             PUSH BX CX DX
+        ; Checks food collision
+            MOV CX, [food].x
+            MOV DX, [food].y
+            CALL getPixelColor
+            CMP AL, snakeHeadColor
+            JE @@foodDetected
+            ADD CX, foodSize
+            CALL getPixelColor
+            CMP AL, snakeHeadColor
+            JE @@foodDetected
+            ADD DX, foodSize
+            CALL getPixelColor
+            CMP AL, snakeHeadColor
+            JE @@foodDetected
+            SUB CX, foodSize
+            CALL getPixelColor
+            CMP AL, snakeHeadColor
+            JE @@foodDetected
+            SUB DX, foodSize
         ; Calculates head element index
             CALL snakeHeadIndex
             MOV BX, AX
@@ -140,26 +159,6 @@
         ; Loads head element coordinates
             MOV CX, [BX].x
             MOV DX, [BX].y
-        ; Checks food collision
-            PUSH CX DX
-            MOV AX, foodSize
-            MOV CX, 2
-            MOV DX, 0
-            DIV CX
-            MOV CX, [food].x
-            ADD CX, AX
-            MOV DX, [food].y
-            ADD DX, AX
-            CALL getPixelColor
-            POP DX CX
-            CMP AL, snakeHeadColor
-            JNE @@checkBorderCollision
-        ; Feeds the snake
-        @@foodDetected:
-            drawDot [food].x, [food].y, backgroundColor, foodSize
-            CALL feedSnake
-            CALL placeFood
-            JMP @@exit
         ; Checks border collisions
         @@checkBorderCollision:
             MOV AX, 0 ; Resets collision state at first
@@ -188,6 +187,12 @@
         ; Changes collision state
         @@collisionDetected:
             MOV AX, 1
+            JMP @@exit
+        ; Feeds the snake
+        @@foodDetected:
+            drawDot [food].x, [food].y, backgroundColor, foodSize
+            CALL feedSnake
+            CALL placeFood
             JMP @@exit
     collisionCheck ENDP
 
