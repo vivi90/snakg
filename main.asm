@@ -84,7 +84,7 @@
         ; Repaints old tail to hide it
             drawDot snake.x, snake.y, backgroundColor, snakeWidth
             MOV BX, 0
-        @@next:
+        @@nextPart:
             ; Checks, if it's the last element
             CALL snakeHeadIndex
             CMP BX, AX
@@ -100,7 +100,7 @@
             drawDot CX, DX, snakeBodyColor, snakeWidth
             ; Increments the pointer
             ADD BX, positionOffset
-            JMP @@next
+            JMP @@nextPart
         @@head:
             ; Loads the current element
             MOV CX, [snake + BX].x

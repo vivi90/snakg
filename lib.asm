@@ -155,14 +155,15 @@ writeText MACRO row, column, style, text, length
 ENDM
 
 writeNumber MACRO row, column, style, number
-    ; Inspired by: https://www.geeksforgeeks.org/8086-program-to-print-a-16-bit-decimal-number
+        LOCAL @@nextDigit
+    ; Inspired by: https://www.geeksforgeeks.org/8086-program-to-print-a-16-bit-decimal-number    
         PUSH AX BX CX DX BP ES number
         PUSH DS
         POP ES
         MOV AX, number
         MOV DH, row
         MOV DL, column
-    @@next:
+    @@nextDigit:
         MOV BX, 10 ; Decimal divisor
         PUSH DX
         MOV DX, 0 ; Reset remainder
@@ -181,7 +182,7 @@ writeNumber MACRO row, column, style, number
         DEC DX
         POP AX
         CMP AX, 0
-        JNE @@next
+        JNE @@nextDigit
         POP number ES BP DX CX BX AX
 ENDM
 
