@@ -38,6 +38,66 @@ randomNumber PROC
 randomNumber ENDP
 
 ;============================
+;            File
+;============================
+
+createFile PROC
+    ; Filename: DS:DX
+        PUSH CX
+        MOV AH, 3Ch
+        MOV CX, 0 ; Doesn't set any special attributes
+        INT 21h
+    ; Error: CF
+    ; Returns handle: AX
+        POP CX
+createFile ENDP
+
+openFile PROC
+    ; Filename: DS:DX
+        MOV AX, 3D02h ; Opens file in read/write mode
+        INT 21h
+    ; Error: CF
+    ; Returns handle: AX
+        RET
+openFile ENDP
+
+closeFile PROC
+    ; Handle: BX
+        PUSH AX
+        MOV AH, 3Eh
+        INT 21h
+    ; Returns error: CF
+        POP AX
+        RET
+closeFile ENDP
+
+readFile PROC
+    ; Handle: BX
+    ; Buffer: DS:DX
+    ; Length: CX
+        PUSH AX
+        MOV AH, 3Fh
+        INT 21h
+    ; Error: CF
+    ; Returns
+        POP AX
+        RET
+readFile ENDP
+
+writeFile PROC
+    ; Handle: BX
+    ; Buffer: DS:DX
+    ; Length: CX
+        PUSH AX
+        MOV AH, 40h
+        INT 21h
+    ; Error: CF
+    ; Returns
+        POP AX
+        RET
+writeFile ENDP
+
+;============================
 ;           Input
 ;============================
 loadInput PROC
