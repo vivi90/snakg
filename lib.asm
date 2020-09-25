@@ -3,18 +3,6 @@
 ;============================
 stackFrame EQU 8 ; Space for stored AX, BX, CX, and DX register
 
-expect MACRO arguments
-        ARG &arguments = stackFrameSize ; Just a macro for 'BP + 4', 'BP + 6' and so on..
-        PUSH AX BX CX DX BP
-        MOV BP, SP
-ENDM
-
-return MACRO result
-        MOV [BP + stackFrameSize + stackFrame + 2], result ; Saves the return value
-        POP BP DX CX BX AX
-        RET stackFrameSize - 2
-ENDM
-
 sleep MACRO time
         PUSH AX BX CX DX
         MOV AH, 86h
