@@ -265,8 +265,10 @@
     ;          Screens
     ;============================
     GameScreen PROC
-            PUSH AX
-            setVideoMode graphicMode
+            PUSH AX BX
+            MOV AL, graphicMode
+            CALL setVideoMode
+            MOV AL, 0
             CALL prepareNewGame
         @@run:
             writeNumber 1, 77, scoreColor, score
@@ -274,11 +276,12 @@
             CALL collisionCheck ; Uses also other procedures for feeding the snake and placing new food
             CMP AX, 1
             JE @@exitGame
-            sleep snakeDelay
+            MOV BX, OFFSET snakeDelay
+            CALL sleep
         @@gameInput:
-            loadInput
+            CALL loadInput
             JE @@run ; checks, if key is pressed
-            clearInput
+            CALL clearInput
             CMP AL, w
             JE @@goUp
             CMP AL, a
@@ -312,25 +315,27 @@
         @@wrongDirection:
             JMP @@run
         @@exitGame:
-            clearInput
-            setVideoMode minimalTextMode
+            MOV AL, minimalTextMode
+            CALL setVideoMode
             writeText 12, 15, gameOverColor, gameOver, gameOverLength
-            sleep gameOverDelay
-            POP AX
+            MOV BX, OFFSET gameOverDelay
+            CALL sleep
+            POP BX AX
             RET
     GameScreen ENDP
 
     MenuScreen PROC
             PUSH AX
         @@menu:
-            setVideoMode textMode
+            MOV AL, textMode
+            CALL setVideoMode
             writeText 0, 0, textColor, logo, logoLength
             writeText 12, 8, hintColor, hint, hintLength
             writeText 24, 20, textColor, credits, creditsLength
         @@menuInput:
-            loadInput
+            CALL loadInput
             JE @@menuInput ; checks, if key is pressed
-            clearInput
+            CALL clearInput
             CMP AL, CR
             JE @@startNewGame
             CMP AL, Esc
@@ -340,7 +345,8 @@
             CALL GameScreen
             JMP @@menu
         @@exitMenu:
-            setVideoMode textMode ; Clears Screen
+            MOV AL, textMode
+            CALL setVideoMode ; Clears Screen
             POP AX
             RET
     MenuScreen ENDP
@@ -349,26 +355,7 @@
     ;        Entry point
     ;============================
     main:
-
-    STARTUPCODE
-    CALL MenuScreen
-    EXITCODE
-        MOV BP, 0
-        MOV CX, 17
-        MOV DX, 17
-        CMP CX, 15
-        JNG fail
-        CMP CX, 15 + 5
-        JNL fail
-        CMP DX, 15
-        JNG fail
-        CMP DX, 15 + 5
-        JL detected
-    fail:
-        MOV BP, 1
-        JMP exit
-    detected:
-        MOV BP, 9
-    exit:
-        NOP
+        STARTUPCODE
+        CALL MenuScreen
+        EXITCODE
     END main

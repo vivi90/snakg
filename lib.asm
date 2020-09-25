@@ -3,15 +3,16 @@
 ;============================
 stackFrame EQU 8 ; Space for stored AX, BX, CX, and DX register
 
-sleep MACRO time
-        PUSH AX BX CX DX
+sleep PROC
+    ; Time: BX = OFFSET
+        PUSH AX CX DX
         MOV AH, 86h
-        MOV BX, OFFSET time
         MOV DX, [BX] ; Lower us
         MOV CX, [BX + 2h] ; Upper us
         INT 15h
-        POP DX CX BX AX
-ENDM
+        POP DX CX AX
+        RET
+sleep ENDP
 
 randomNumber PROC
     ; Inspired by: https://stackoverflow.com/questions/17855817/generating-a-random-number-within-range-of-0-9-in-x86-8086-assembly
@@ -39,30 +40,31 @@ randomNumber ENDP
 ;============================
 ;           Input
 ;============================
-loadInput MACRO
+loadInput PROC
     ; Return: AL
         MOV AH, 01h ; Without waiting
         INT 16h
-ENDM
+        RET
+loadInput ENDP
 
-clearInput MACRO
+clearInput PROC
         PUSH AX
         MOV AH, 0Ch
         MOV AL, 0h
         INT 21h
         POP AX
-ENDM
+        RET
+clearInput ENDP
 
 ;============================
 ;          Output
 ;============================
-setVideoMode MACRO mode
-        PUSH AX
+setVideoMode PROC
+    ; Mode: AL
         MOV AH, 0h
-        MOV AL, mode
         INT 10h
-        POP AX
-ENDM
+        RET
+setVideoMode ENDP
 
 getPixelColor PROC
     ; x: CX
