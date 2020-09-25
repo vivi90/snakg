@@ -223,8 +223,6 @@
             SUB BX, positionOffset
             JMP @@nextCheck
         @@place:
-            ;MOV CX, 12 * snakeWidth + borderWidth
-            ;MOV DX, 2 * borderWidth + textHeight + snakeWidth
             MOV [food].x, CX
             MOV [food].y, DX
             drawDot CX, DX, foodColor, foodSize
