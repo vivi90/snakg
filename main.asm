@@ -299,6 +299,42 @@
     ;============================
     ;      Menu subroutines
     ;============================
+    loadHighscore PROC
+            PUSH AX BX CX DX
+            LEA DX, highscoreFile
+            CALL openFile
+            JC @@return ; If file not found
+            MOV BX, AX ; Handle
+            MOV CX, 2 ; Byte length of each value
+            LEA DX, highscore
+            CALL readFile
+            LEA DX, [DS:(OFFSET highscore + 2)]
+            CALL readFile
+            LEA DX, [DS:(OFFSET highscore + 4)]
+            CALL readFile
+            CALL closeFile
+        @@return:
+            POP DX CX BX AX
+            RET
+    loadHighscore ENDP
+
+    saveHighscore PROC
+            PUSH AX BX CX DX
+            LEA DX, highscoreFile
+            CALL createFile
+            MOV BX, AX ; Handle
+            MOV CX, 2 ; Byte length of each value
+            LEA DX, highscore
+            CALL writeFile
+            LEA DX, [DS:(OFFSET highscore + 2)]
+            CALL writeFile
+            LEA DX, [DS:(OFFSET highscore + 4)]
+            CALL writeFile
+            CALL closeFile
+            POP DX CX BX AX
+            RET
+    saveHighscore ENDP
+
     showHighscore PROC
             PUSH AX
         @@firstPlace:
@@ -398,6 +434,7 @@
 
     MenuScreen PROC
             PUSH AX
+            CALL loadHighscore
         @@menu:
             MOV AL, textMode
             CALL setVideoMode
@@ -418,6 +455,7 @@
             CALL GameScreen
             JMP @@menu
         @@exitMenu:
+            CALL saveHighscore
             MOV AL, textMode
             CALL setVideoMode ; Clears Screen
             POP AX
