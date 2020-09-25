@@ -9,7 +9,7 @@ graphicHeight EQU 350
 textHeight EQU 25
 borderWidth EQU 8 ; 8 pixels (max. 256)
 snakeWidth EQU 8 ; 8 pixels (max. 256)
-foodSize EQU 8 ; 8x8 pixels (max. 256x256)
+foodSize EQU 4 ; 8x8 pixels (max. 256x256)
 backgroundColor EQU black
 textColor EQU white
 hintColor EQU whiteblink
@@ -22,5 +22,4 @@ gameOverColor EQU red
 defaultSnakeLength EQU 8
 defaultSnakeDirection EQU right
 snakeDelay DD 100000 ; 100ms
-;snakeDelay DD 1000000 ; 1s
 gameOverDelay DD 2000000 ; 2s

@@ -140,46 +140,20 @@
         ; Loads head element coordinates
             MOV CX, [BX].x
             MOV DX, [BX].y
-        ; Resets collision state
-            MOV AX, 0
         ; Checks food collision
-            CMP CX, [food].x
-            JL $ + 20 ; Next x coordinate
-            CMP CX, [food].x + foodSize
-            JG $ + 14 ; Next x coordinate
-            CMP DX, [food].y
-            JL $ + 8 ; Next x coordinate
-            CMP DX, [food].y + foodSize
-            JNG @@foodDetected
-            ADD CX, snakeWidth
-            CMP CX, [food].x
-            JL $ + 20 ; Next x coordinate
-            CMP CX, [food].x + foodSize
-            JG $ + 14 ; Next x coordinate
-            CMP DX, [food].y
-            JL $ + 8 ; Next x coordinate
-            CMP DX, [food].y + foodSize
-            JNG @@foodDetected
-            ADD DX, snakeWidth
-            CMP CX, [food].x
-            JL $ + 20 ; Next x coordinate
-            CMP CX, [food].x + foodSize
-            JG $ + 14 ; Next x coordinate
-            CMP DX, [food].y
-            JL $ + 8 ; Next x coordinate
-            CMP DX, [food].y + foodSize
-            JNG @@foodDetected
-            SUB CX, snakeWidth
-            CMP CX, [food].x
-            JL $ + 20 ; Next x coordinate
-            CMP CX, [food].x + foodSize
-            JG $ + 14 ; Next x coordinate
-            CMP DX, [food].y
-            JL $ + 8 ; Next x coordinate
-            CMP DX, [food].y + foodSize
-            JNG @@foodDetected
-            SUB DX, snakeWidth
-            JMP @@checkBorderCollision
+            PUSH CX DX
+            MOV AX, foodSize
+            MOV CX, 2
+            MOV DX, 0
+            DIV CX
+            MOV CX, [food].x
+            ADD CX, AX
+            MOV DX, [food].y
+            ADD DX, AX
+            CALL getPixelColor
+            POP DX CX
+            CMP AL, snakeHeadColor
+            JNE @@checkBorderCollision
         ; Feeds the snake
         @@foodDetected:
             drawDot [food].x, [food].y, backgroundColor, foodSize
@@ -188,6 +162,7 @@
             JMP @@exit
         ; Checks border collisions
         @@checkBorderCollision:
+            MOV AX, 0 ; Resets collision state at first
             CMP CX, borderWidth
             JL @@collisionDetected
             CMP CX, graphicWidth - borderWidth - snakeWidth

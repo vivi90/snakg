@@ -76,6 +76,18 @@ setVideoMode MACRO mode
         POP AX
 ENDM
 
+getPixelColor PROC
+    ; x: CX
+    ; y: DX
+        PUSH BX
+        MOV AH, 0Dh
+        MOV BH, 0 ; Page: 0
+        INT 10h
+    ; Returns color: AL
+        POP BX
+        RET
+getPixelColor ENDP
+
 writeText MACRO row, column, style, text, length
         PUSH AX BX CX DX BP ES
         MOV DL, column
