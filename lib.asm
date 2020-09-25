@@ -1,8 +1,6 @@
 ;============================
 ;           Basic
 ;============================
-stackFrame EQU 8 ; Space for stored AX, BX, CX, and DX register
-
 sleep PROC
     ; Time: BX = OFFSET
         PUSH AX CX DX
@@ -156,7 +154,7 @@ ENDM
 
 writeNumber MACRO row, column, style, number
         LOCAL @@nextDigit
-    ; Inspired by: https://www.geeksforgeeks.org/8086-program-to-print-a-16-bit-decimal-number    
+    ; Inspired by: https://www.geeksforgeeks.org/8086-program-to-print-a-16-bit-decimal-number
         PUSH AX BX CX DX BP ES number
         PUSH DS
         POP ES
