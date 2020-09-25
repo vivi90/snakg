@@ -8,22 +8,19 @@
     ;============================
     ;            Snake
     ;============================
-    snakeLength DW 1
+    snakeLength DW defaultSnakeLength
     snake POSITION ((graphicWidth/snakeWidth)*(graphicHeight/snakeWidth)) DUP ({})
-    snakeDirection DW 0
+    snakeDirection DIRECTION defaultSnakeDirection
 
     ;============================
     ;            Food
     ;============================
-    food POSITION <320, 175>
-         POSITION <320, 300>
+    food POSITION {}
 
     ;============================
     ;           Score
     ;============================
     score DW 0
-        m DW 1111h
-        n DW 2222h
 
 .CODE
     INCLUDE lib.asm
@@ -34,7 +31,7 @@
     ;      Game subroutines
     ;============================
     prepareNewGame PROC
-            PUSH AX DX
+            PUSH AX BX DX
             MOV snakeLength, 0
             MOV BX, 0
         @@createSnake:
@@ -49,10 +46,22 @@
             JNE @@createSnake
             MOV snakeDirection, defaultSnakeDirection
             MOV score, 0
-            MOV BX, snakeGrowInterval
-            POP DX AX
+            CALL drawBorder
+            writeText 1, 2, textColor, scoreLabel, scoreLabelLength
+            CALL placeFood
+            POP DX BX AX
             RET
     prepareNewGame ENDP
+
+    snakeHeadIndex PROC
+            PUSH DX
+            MOV AX, positionOffset
+            MUL snakeLength
+            SUB AX, positionOffset
+            POP DX
+        ; Returns index: AX
+            RET
+    snakeHeadIndex ENDP
 
     drawBorder PROC
             PUSH CX DX
@@ -69,15 +78,6 @@
             POP DX CX
             RET
     drawBorder ENDP
-
-    snakeHeadIndex PROC
-            PUSH DX
-            MOV AX, positionOffset
-            MUL snakeLength
-            SUB AX, positionOffset
-            POP DX
-            RET
-    snakeHeadIndex ENDP
 
     moveAndDrawSnake PROC
             PUSH AX BX CX DX
@@ -142,10 +142,55 @@
             MOV DX, [BX].y
         ; Resets collision state
             MOV AX, 0
+        ; Checks food collision
+            CMP CX, [food].x
+            JL $ + 20 ; Next x coordinate
+            CMP CX, [food].x + foodSize
+            JG $ + 14 ; Next x coordinate
+            CMP DX, [food].y
+            JL $ + 8 ; Next x coordinate
+            CMP DX, [food].y + foodSize
+            JNG @@foodDetected
+            ADD CX, snakeWidth
+            CMP CX, [food].x
+            JL $ + 20 ; Next x coordinate
+            CMP CX, [food].x + foodSize
+            JG $ + 14 ; Next x coordinate
+            CMP DX, [food].y
+            JL $ + 8 ; Next x coordinate
+            CMP DX, [food].y + foodSize
+            JNG @@foodDetected
+            ADD DX, snakeWidth
+            CMP CX, [food].x
+            JL $ + 20 ; Next x coordinate
+            CMP CX, [food].x + foodSize
+            JG $ + 14 ; Next x coordinate
+            CMP DX, [food].y
+            JL $ + 8 ; Next x coordinate
+            CMP DX, [food].y + foodSize
+            JNG @@foodDetected
+            SUB CX, snakeWidth
+            CMP CX, [food].x
+            JL $ + 20 ; Next x coordinate
+            CMP CX, [food].x + foodSize
+            JG $ + 14 ; Next x coordinate
+            CMP DX, [food].y
+            JL $ + 8 ; Next x coordinate
+            CMP DX, [food].y + foodSize
+            JNG @@foodDetected
+            SUB DX, snakeWidth
+            JMP @@checkBorderCollision
+        ; Feeds the snake
+        @@foodDetected:
+            drawDot [food].x, [food].y, backgroundColor, foodSize
+            CALL feedSnake
+            CALL placeFood
+            JMP @@exit
         ; Checks border collisions
+        @@checkBorderCollision:
             CMP CX, borderWidth
             JL @@collisionDetected
-            CMP CX, graphicWidth - borderWidth
+            CMP CX, graphicWidth - borderWidth - snakeWidth
             JG @@collisionDetected
             CMP DX, 2 * borderWidth + textHeight
             JL @@collisionDetected
@@ -171,12 +216,44 @@
             JMP @@exit
     collisionCheck ENDP
 
+    placeFood PROC
+            PUSH AX BX CX DX
+        @@randomCoordinates:
+        ; Gets random x coordinate
+            MOV AX, borderWidth
+            MOV BX, graphicWidth - borderWidth
+            CALL randomNumber
+            MOV CX, AX
+        ; Gets random y coordinate
+            MOV AX, 2 * borderWidth + textHeight
+            MOV BX, graphicHeight - borderWidth - snakeWidth
+            CALL randomNumber
+            MOV DX, AX
+        ; Iterates over all snake parts to check collision
+            MOV BX, OFFSET snake
+            CALL snakeHeadIndex
+            ADD BX, AX
+        @@nextCheck:
+            CMP CX, [BX].x
+            JNE $ + 7
+            CMP DX, [BX].y
+            JE @@randomCoordinates
+            CMP BX, OFFSET snake
+            JE @@place
+            SUB BX, positionOffset
+            JMP @@nextCheck
+        @@place:
+            ;MOV CX, 12 * snakeWidth + borderWidth
+            ;MOV DX, 2 * borderWidth + textHeight + snakeWidth
+            MOV [food].x, CX
+            MOV [food].y, DX
+            drawDot CX, DX, foodColor, foodSize
+            POP DX CX BX AX
+            RET
+    placeFood ENDP
+
     feedSnake PROC
-        ; Input & Return: BX
-            PUSH AX CX DX
-            DEC BX
-            CMP BX, 0
-            JNE @@exit
+            PUSH AX BX CX DX
         ; Increases score
             INC score
         ; Increases snake length
@@ -204,10 +281,8 @@
             MOV [snake + BX + positionOffset].x, CX
             MOV [snake + BX + positionOffset].y, DX
             INC snakeLength
-        ; Resets interval
-            MOV BX, snakeGrowInterval
         @@exit:
-            POP DX CX AX
+            POP DX CX BX AX
             RET
     feedSnake ENDP
 
@@ -215,18 +290,15 @@
     ;          Screens
     ;============================
     GameScreen PROC
-            PUSH AX BX
+            PUSH AX
             setVideoMode graphicMode
             CALL prepareNewGame
-            CALL drawBorder
-            writeText 1, 2, textColor, scoreLabel, scoreLabelLength
         @@run:
             writeNumber 1, 77, scoreColor, score
             CALL moveAndDrawSnake
-            CALL collisionCheck
+            CALL collisionCheck ; Uses also other procedures for feeding the snake and placing new food
             CMP AX, 1
             JE @@exitGame
-            CALL feedSnake
             sleep snakeDelay
         @@gameInput:
             loadInput
@@ -269,7 +341,7 @@
             setVideoMode minimalTextMode
             writeText 12, 15, gameOverColor, gameOver, gameOverLength
             sleep gameOverDelay
-            POP BX AX
+            POP AX
             RET
     GameScreen ENDP
 
@@ -302,7 +374,26 @@
     ;        Entry point
     ;============================
     main:
-        STARTUPCODE
-        CALL MenuScreen
-        EXITCODE
+
+    STARTUPCODE
+    CALL MenuScreen
+    EXITCODE
+        MOV BP, 0
+        MOV CX, 17
+        MOV DX, 17
+        CMP CX, 15
+        JNG fail
+        CMP CX, 15 + 5
+        JNL fail
+        CMP DX, 15
+        JNG fail
+        CMP DX, 15 + 5
+        JL detected
+    fail:
+        MOV BP, 1
+        JMP exit
+    detected:
+        MOV BP, 9
+    exit:
+        NOP
     END main
