@@ -1,7 +1,7 @@
 ;============================
 ;          Colors
 ;============================
-COLOR ENUM black, blue, green, cyan, red, magenta, brown, lightgray, darkgray, lightblue, lightgreen, lightcyan, lightred, lightmagenta, yellow, white, redblink = 132, whiteblink = 143
+COLOR ENUM black, blue, green, cyan, red, magenta, brown, lightgray, darkgray, lightblue, lightgreen, lightcyan, lightred, lightmagenta, yellow, white, redblink = 132, yellowblink = 142, whiteblink = 143
 
 ;============================
 ;           Keys

@@ -5,6 +5,8 @@
     INCLUDE types.asm
     INCLUDE config.asm
 
+    buffer DW ? ; Multipurpose buffer for working with temporary data
+
     ;============================
     ;            Snake
     ;============================
@@ -20,7 +22,8 @@
     ;============================
     ;           Score
     ;============================
-    score DW 0
+    currentScore DW 0 ; Maximum: 65535; Real maximum: 3500
+    highscore DW 1000, 500, 100 ; Initial highscore, if none exists
 
 .CODE
     INCLUDE lib.asm
@@ -45,9 +48,9 @@
             CMP snakeLength, defaultSnakeLength
             JNE @@createSnake
             MOV snakeDirection, defaultSnakeDirection
-            MOV score, 0
+            MOV currentScore, 0
             CALL drawBorder
-            writeText 1, 2, textColor, scoreLabel, scoreLabelLength
+            writeText 1, 2, textColor, gameScoreLabel, gameScoreLabelLength
             CALL placeFood
             POP DX BX AX
             RET
@@ -233,7 +236,7 @@
     feedSnake PROC
             PUSH AX BX CX DX
         ; Increases score
-            INC score
+            INC currentScore
         ; Increases snake length
             CALL snakeHeadIndex
             MOV BX, AX
@@ -264,6 +267,71 @@
             RET
     feedSnake ENDP
 
+    updateHighscore PROC
+            PUSH AX BX CX
+            MOV BX, currentScore
+        @@checkFirstPlace:
+            MOV AX, highscore
+            CMP AX, BX
+            JG @@checkSecondPlace
+            MOV CX, [DS:(OFFSET highscore + 2)] ; Old second place
+            MOV [DS:(OFFSET highscore + 4)], CX ; Becomes new third place
+            MOV [DS:(OFFSET highscore + 2)], AX ; Old first place becomes new second place
+            MOV highscore, BX ; New first place
+            JMP @@exit
+        @@checkSecondPlace:
+            MOV AX, [DS:(OFFSET highscore + 2)]
+            CMP AX, BX
+            JG @@checkThirdPlace
+            MOV [DS:(OFFSET highscore + 4)], AX ; Old second place becomes new third place
+            MOV [DS:(OFFSET highscore + 2)], BX ; New second place
+            JMP @@exit
+        @@checkThirdPlace:
+            MOV AX, [DS:(OFFSET highscore + 4)]
+            CMP AX, BX
+            JG @@exit
+            MOV [DS:(OFFSET highscore + 4)], BX ; New third place
+        @@exit:
+            POP CX BX AX
+            RET
+    updateHighscore ENDP
+
+    ;============================
+    ;      Menu subroutines
+    ;============================
+    showHighscore PROC
+            PUSH AX
+        @@firstPlace:
+            writeText 16, 25, highscoreColor, firstPlaceLabel, firstPlaceLabelLength
+            MOV AX, highscore
+            writeNumber 16, 40, highscoreColor, highscore
+            writeText 16, 43, highscoreColor, scoreLabel, scoreLabelLength
+            CMP AX, currentScore
+            JNE @@secondPlace
+            writeNumber 16, 40, ownHighscoreColor, highscore
+        @@secondPlace:
+            writeText 18, 25, highscoreColor, secondPlaceLabel, secondPlaceLabelLength
+            MOV AX, [DS:(OFFSET highscore + 2)]
+            MOV buffer, AX
+            writeNumber 18, 40, highscoreColor, buffer
+            writeText 18, 43, highscoreColor, scoreLabel, scoreLabelLength
+            CMP AX, currentScore
+            JNE @@thirdPlace
+            writeNumber 18, 40, ownHighscoreColor, buffer
+        @@thirdPlace:
+            writeText 20, 25, highscoreColor, thirdPlaceLabel, thirdPlaceLabelLength
+            MOV AX, [DS:(OFFSET highscore + 4)]
+            MOV buffer, AX
+            writeNumber 20, 40, highscoreColor, buffer
+            writeText 20, 43, highscoreColor, scoreLabel, scoreLabelLength
+            CMP AX, currentScore
+            JNE @@return
+            writeNumber 20, 40, ownHighscoreColor, buffer
+        @@return:
+            POP AX
+            RET
+    showHighscore ENDP
+
     ;============================
     ;          Screens
     ;============================
@@ -274,7 +342,7 @@
             MOV AL, 0
             CALL prepareNewGame
         @@run:
-            writeNumber 1, 77, scoreColor, score
+            writeNumber 1, 77, scoreColor, currentScore
             CALL moveAndDrawSnake
             CALL collisionCheck ; Uses also other procedures for feeding the snake and placing new food
             CMP AX, 1
@@ -318,6 +386,7 @@
         @@wrongDirection:
             JMP @@run
         @@exitGame:
+            CALL updateHighscore
             MOV AL, minimalTextMode
             CALL setVideoMode
             writeText 12, 15, gameOverColor, gameOver, gameOverLength
@@ -334,6 +403,7 @@
             CALL setVideoMode
             writeText 0, 0, textColor, logo, logoLength
             writeText 12, 8, hintColor, hint, hintLength
+            CALL showHighscore
             writeText 24, 20, textColor, credits, creditsLength
         @@menuInput:
             CALL loadInput

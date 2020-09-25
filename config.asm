@@ -13,6 +13,8 @@ foodSize EQU 4 ; 8x8 pixels (max. 256x256)
 backgroundColor EQU black
 textColor EQU white
 hintColor EQU whiteblink
+highscoreColor EQU yellow
+ownHighscoreColor EQU yellowblink
 borderColor EQU darkgray
 snakeBodyColor EQU blue
 snakeHeadColor EQU green
@@ -23,3 +25,4 @@ defaultSnakeLength EQU 8
 defaultSnakeDirection EQU right
 snakeDelay DD 100000 ; 100ms
 gameOverDelay DD 2000000 ; 2s
+highscoreFile DB "score.txt", 0
