@@ -2,6 +2,7 @@
 .STACK 100h
 .DATA
     INCLUDE text.asm
+    INCLUDE sound.asm
     INCLUDE types.asm
     INCLUDE config.asm
 
@@ -51,7 +52,7 @@
             MOV currentScore, 0
             CALL drawBorder
             writeText 1, 2, textColor, gameScoreLabel, gameScoreLabelLength
-            CALL placeFood
+            CALL moveFood
             POP DX BX AX
             RET
     prepareNewGame ENDP
@@ -194,12 +195,15 @@
         ; Feeds the snake
         @@foodDetected:
             drawDot [food].x, [food].y, backgroundColor, foodSize
+            MOV BX, OFFSET feedSound
+            MOV CX, feedSoundLength
+            CALL playSound
             CALL feedSnake
-            CALL placeFood
+            CALL moveFood
             JMP @@exit
     collisionCheck ENDP
 
-    placeFood PROC
+    moveFood PROC
             PUSH AX BX CX DX
         @@randomCoordinates:
         ; Gets random x coordinate
@@ -228,10 +232,9 @@
         @@place:
             MOV [food].x, CX
             MOV [food].y, DX
-            drawDot CX, DX, foodColor, foodSize
             POP DX CX BX AX
             RET
-    placeFood ENDP
+    moveFood ENDP
 
     feedSnake PROC
             PUSH AX BX CX DX
@@ -295,6 +298,10 @@
             POP CX BX AX
             RET
     updateHighscore ENDP
+
+    drawFood PROC
+            drawDot [food].x, [food].y, foodColor, foodSize
+    drawFood ENDP
 
     ;============================
     ;      Menu subroutines
@@ -380,6 +387,7 @@
         @@run:
             writeNumber 1, 77, scoreColor, currentScore
             CALL moveAndDrawSnake
+            CALL drawFood
             CALL collisionCheck ; Uses also other procedures for feeding the snake and placing new food
             CMP AX, 1
             JE @@exitGame
@@ -426,8 +434,9 @@
             MOV AL, minimalTextMode
             CALL setVideoMode
             writeText 12, 15, gameOverColor, gameOver, gameOverLength
-            MOV BX, OFFSET gameOverDelay
-            CALL sleep
+            MOV BX, OFFSET gameOverSound
+            MOV CX, gameOverSoundLength
+            CALL playSound
             POP BX AX
             RET
     GameScreen ENDP
@@ -441,7 +450,7 @@
             writeText 0, 0, textColor, logo, logoLength
             writeText 12, 8, hintColor, hint, hintLength
             CALL showHighscore
-            writeText 24, 20, textColor, credits, creditsLength
+            writeText 24, 16, textColor, credits, creditsLength
         @@menuInput:
             CALL loadInput
             JE @@menuInput ; checks, if key is pressed

@@ -238,3 +238,35 @@ drawVerticalLine MACRO x, color, size
         JNE @@next
         POP DX
 ENDM
+
+playSound PROC
+        ; Inspired by: http://muruganad.com/8086/8086-assembly-language-program-to-play-sound-using-pc-speaker.html
+        ; Sound offset: BX
+        ; Sound length: CX
+        PUSH AX BX CX
+        ; Prepares speakers
+        MOV AL, 182
+        OUT 43h, AL
+    @@note:
+        ; Sets frequency number
+        MOV AX, [BX]
+        OUT 42h, AL
+        MOV AL, AH
+        OUT 42h, AL
+        ; Turns sound on
+        IN AL, 61h
+        OR AL, 00000011b
+        OUT 61h, AL
+        ; Pause
+        ADD BX, 4
+        CALL sleep
+        ; Turns sound off
+        IN AL, 61h
+        AND AL, 11111100b
+        OUT 61h, AL
+        ADD BX, 4
+        SUB CX, 8
+        JNE @@note
+        POP CX BX AX
+        RET
+playSound ENDP

@@ -35,5 +35,5 @@ gameScoreLabelLength = $ - gameScoreLabel
 gameOver DB "Game Over!"
 gameOverLength = $ - gameOver
 
-credits DB "2020 by Vivien Richter, MIT License"
+credits DB "2020 by Vivien Richter, v2.0.0, MIT License"
 creditsLength = $ - credits
